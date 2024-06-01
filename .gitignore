@@ -1,0 +1,45 @@
+# Ignore the .env file
+.env
+
+# Ignore the scripts directory
+scripts/
+
+# Ignore any other common files and directories you may not want in your git repository
+# Logs
+*.log
+
+# Dependency directories
+node_modules/
+vendor/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+
+# Go related
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.mod
+*.sum
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# Ignore Go build output
+/build/
+
+# Ignore specific binary files
+*.o
+*.a
+*.out
