@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	telegramToken string
-	redisAddr string
+	redisAddr     string
 }
 
 func New() *Config {
@@ -18,7 +18,7 @@ func New() *Config {
 	}
 	return &Config{
 		telegramToken: os.Getenv("TGAPI"),
-		redisAddr:  os.Getenv("REDIS_ADDR"),
+		redisAddr:     os.Getenv("REDIS_ADDR"),
 	}
 }
 
@@ -29,4 +29,3 @@ func (c *Config) GetTelegramToken() string {
 func (c *Config) GetRedisAddr() string {
 	return c.redisAddr
 }
-

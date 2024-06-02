@@ -7,51 +7,55 @@ import (
 	tgapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-type MessageHandle struct {
+type UpdateHandle struct {
 	Bot     *tgapi.BotAPI
 	Storage *storage.Storage
 	Ans     Answers
 }
 
-func NewHandler(bot *tgapi.BotAPI, Storage *storage.Storage) *MessageHandle {
-	return &MessageHandle{
+func NewHandler(bot *tgapi.BotAPI, Storage *storage.Storage) *UpdateHandle {
+	return &UpdateHandle{
 		Bot:     bot,
 		Storage: Storage,
 		Ans:     GetAnswer(),
 	}
 }
 
-func (m *MessageHandle) Handle(message *tgapi.Message) {
-	if message.IsCommand() {
-		//Обработка команд
-		if message.Command() == "run" {
-			m.CommandRun(message)
-		} else if message.Command() == "start" {
-			m.CommandStart(message)
-		} else if message.Command() == "next" {
-			m.CommandNext(message)
-		} else if message.Command() == "exit" {
-			m.CommandExit(message)
+func (m *UpdateHandle) Handle(upd tgapi.Update) {
+	if upd.Message == nil {
+		return
+	}
+	if upd.Message.IsCommand() {
+		// Обработка команд
+		switch upd.Message.Command() {
+		case "run":
+			m.CommandRun(upd.Message)
+		case "start":
+			m.CommandStart(upd.Message)
+		case "next":
+			m.CommandNext(upd.Message)
+		case "exit":
+			m.CommandExit(upd.Message)
 		}
 	} else {
 		//Обработка сообщений
-		user, err := m.Storage.GetUser(message.Chat.ID)
+		user, err := m.Storage.GetUser(upd.Message.Chat.ID)
 		if err != nil {
 			//Если пользователя нет в списке
-			m.Send(message.Chat.ID, m.Ans.BotNotRunned)
+			m.Send(upd.Message.Chat.ID, m.Ans.BotNotRunned)
 		} else {
 			//Если пользователя есть в списке
 			if user.Action == "waiting" {
-				m.Send(message.Chat.ID, m.Ans.AllReadyWaiting)
+				m.Send(upd.Message.Chat.ID, m.Ans.AllReadyWaiting)
 			} else if user.Action == "chat" {
-				m.Send(user.PartnerID, message.Text)
+				m.Send(user.PartnerID, upd.Message.Text)
 			}
 		}
 
 	}
 }
 
-func (m *MessageHandle) CommandExit(message *tgapi.Message) {
+func (m *UpdateHandle) CommandExit(message *tgapi.Message) {
 	//Получение пользователя
 	user, err := m.Storage.GetUser(message.Chat.ID)
 	if err != nil {
@@ -69,7 +73,7 @@ func (m *MessageHandle) CommandExit(message *tgapi.Message) {
 	m.StartChat(user.PartnerID)
 }
 
-func (m *MessageHandle) CommandNext(message *tgapi.Message) {
+func (m *UpdateHandle) CommandNext(message *tgapi.Message) {
 	//Получение пользователя
 	user, err := m.Storage.GetUser(message.Chat.ID)
 	if err != nil {
@@ -91,12 +95,12 @@ func (m *MessageHandle) CommandNext(message *tgapi.Message) {
 
 }
 
-func (m *MessageHandle) CommandStart(message *tgapi.Message) {
+func (m *UpdateHandle) CommandStart(message *tgapi.Message) {
 	//Отправка сообщения о начале работы
 	m.SendWithKeyboard(message.Chat.ID, m.Ans.StartFirst, []string{"/run"})
 }
 
-func (m *MessageHandle) CommandRun(message *tgapi.Message) {
+func (m *UpdateHandle) CommandRun(message *tgapi.Message) {
 	//Добавление пользователя в список
 	err := m.Storage.SetUser(message.Chat.ID, message.From.UserName)
 	if err != nil {

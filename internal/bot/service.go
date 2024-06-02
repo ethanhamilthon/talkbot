@@ -4,12 +4,12 @@ import (
 	tgapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func (m *MessageHandle) Send(ID int64, text string) {
+func (m *UpdateHandle) Send(ID int64, text string) {
 	msg := tgapi.NewMessage(ID, text)
 	m.Bot.Send(msg)
 }
 
-func (m *MessageHandle) SendWithKeyboard(ID int64, text string, keys []string) {
+func (m *UpdateHandle) SendWithKeyboard(ID int64, text string, keys []string) {
 	msg := tgapi.NewMessage(ID, text)
 	Buttons := make([]tgapi.KeyboardButton, 0)
 	for _, key := range keys {
@@ -19,13 +19,13 @@ func (m *MessageHandle) SendWithKeyboard(ID int64, text string, keys []string) {
 	m.Bot.Send(msg)
 }
 
-func (m *MessageHandle) SendWithCleanKeyboard(ID int64, text string) {
+func (m *UpdateHandle) SendWithCleanKeyboard(ID int64, text string) {
 	msg := tgapi.NewMessage(ID, text)
 	msg.ReplyMarkup = tgapi.NewRemoveKeyboard(true)
 	m.Bot.Send(msg)
 }
 
-func (m *MessageHandle) StartChat(ID int64) {
+func (m *UpdateHandle) StartChat(ID int64) {
 	//получение пользователя
 	user, err := m.Storage.GetUser(ID)
 	if err != nil {

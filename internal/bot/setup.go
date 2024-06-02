@@ -33,13 +33,10 @@ func (b *Bot) Start() {
 
 	//Создание хэндлера сообщений
 	store := storage.New()
-	mh := NewHandler(bot, store)
+	updateHandle := NewHandler(bot, store)
 
 	//Основной цикл работы бота
 	for update := range updates {
-		if update.Message != nil {
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			mh.Handle(update.Message)
-		}
+		go updateHandle.Handle(update)
 	}
 }

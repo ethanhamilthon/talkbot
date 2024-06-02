@@ -10,7 +10,6 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-
 type User struct {
 	ID        int64
 	Name      string
@@ -28,7 +27,11 @@ var ctx = context.Background()
 func New() *Storage {
 	config := cfg.New()
 	opt, _ := redis.ParseURL(config.GetRedisAddr())
-  client := redis.NewClient(opt)
+	client := redis.NewClient(opt)
+	sts := client.Ping(ctx)
+	if sts.Err()!= nil {
+		panic(sts.Err())
+	}
 	return &Storage{
 		config: config,
 		client: client,
