@@ -11,11 +11,13 @@ import (
 )
 
 type User struct {
-	ID        int64
-	Name      string
-	PartnerID int64
-	Action    string
+	ID          int64
+	Name        string
+	PartnerID   int64
+	PartnerName string 
+	Action      string //chat, waiting, offline,
 }
+
 
 type Storage struct {
 	config *cfg.Config
@@ -29,7 +31,7 @@ func New() *Storage {
 	opt, _ := redis.ParseURL(config.GetRedisAddr())
 	client := redis.NewClient(opt)
 	sts := client.Ping(ctx)
-	if sts.Err()!= nil {
+	if sts.Err() != nil {
 		panic(sts.Err())
 	}
 	return &Storage{
@@ -42,17 +44,21 @@ func (s *Storage) GetUser(UserID int64) (User, error) {
 	return s.getUserFromRedis(UserID)
 }
 
-func (s *Storage) SetUser(UserID int64, UserName string) error {
-	_, err := s.GetUser(UserID)
-	if err == nil {
-		return errors.New("User already exists")
+func (s *Storage) IsPartnerOnline(PartnerID int64) bool {
+	partner, err := s.getUserFromRedis(PartnerID)
+	if err != nil {
+		return false
 	}
+	return partner.Action == "chat"
+}
 
+func (s *Storage) SetUser(UserID int64, UserName string) error {
 	user := User{
-		ID:        UserID,
-		Name:      UserName,
-		PartnerID: 0,
-		Action:    "waiting",
+		ID:          UserID,
+		Name:        UserName,
+		PartnerID:   0,
+		PartnerName: "",
+		Action:      "waiting",
 	}
 
 	return s.setUserToRedis(user)
@@ -70,8 +76,10 @@ func (s *Storage) CreateChat(UserID int64, PartnerID int64) error {
 	}
 
 	user.PartnerID = PartnerID
+	user.PartnerName = partner.Name
 	user.Action = "chat"
 	partner.PartnerID = UserID
+	partner.PartnerName = user.Name
 	partner.Action = "chat"
 
 	err = s.setUserToRedis(user)
@@ -87,12 +95,7 @@ func (s *Storage) CreateChat(UserID int64, PartnerID int64) error {
 	return nil
 }
 
-func (s *Storage) GetPartner(UserID int64) (User, error) {
-	user, err := s.getUserFromRedis(UserID)
-	if err != nil {
-		return User{}, errors.New("User does not exist")
-	}
-
+func (s *Storage) GetPartner(user User) (User, error) {
 	keys, err := s.client.Keys(ctx, "user:*").Result()
 	if err != nil {
 		return User{}, err
